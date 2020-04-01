@@ -52,7 +52,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'container_id' => '2caa236b7c',
         'container_name' => '/traefik-lb_traefik_1',
         'source' => 'stdout',
-        'level' => 'debug',
+        'level' => 'DEBUG',
         'message' => 'Filtering disabled container',
         'providerName' => 'docker',
         'container' => 'deposit-collection-edge-11facecb13',
@@ -169,7 +169,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'container_name' => '/dev01_rabbitmq_1',
         'message' => '<0.734.0> connection <0.734.0> (192.168.128.5:49388 -> 192.168.128.4:5672): user \'guest\' authenticated and granted access to vhost \'/\'',
         'source' => 'stdout',
-        'level' => 'info',
+        'level' => 'INFO',
         'timestamp' => 1_585_562_091
       }
     ]

@@ -81,6 +81,10 @@ module Fluent
         %w[lvl level]
       ].freeze
 
+      UPCASE_LIST = [
+        'level'
+      ].freeze
+
       def ow_post_process(record)
         text = record['log']
         record.delete('log')
@@ -91,8 +95,13 @@ module Fluent
             record.delete(src)
           end
         end
+
+        UPCASE_LIST.each do |k|
+          record[k] = record[k].upcase if record[k]
+        end
+
         record['message'] ||= text
-        return record
+        record
       end
 
       def filter(_tag, _time, record)

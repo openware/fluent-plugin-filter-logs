@@ -13,17 +13,72 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'json'
+require 'date'
+require 'logfmt'
 require "fluent/plugin/filter"
 
 module Fluent
   module Plugin
     class LogsFilter < Filter
       Fluent::Plugin.register_filter("logs", self)
+      REGEXPS_LOGS = [
+        /^(?<upstream_ip>\S+) - - \[(?<time>\S+ \+\d{4})\] "(?<request>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)" "(?<user_ip>[^"]+)"$/,
+        /^\[[^\]]+\] (?<upstream_ip>\S+) - [^ ]+ \[(?<time>[^\]]+)\] "(?<request>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)"/,
+        /^(?<time>\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\S+) \[(?<level>[^\]]+)\] (?<msg>.*)/
+      ].freeze
 
-      def filter(tag, time, record)
-        logger.info "filter tag: #{tag.inspect}"
-        logger.info "filter time: #{time.inspect}"
-        logger.info "filter record: #{record.inspect}"
+      REGEXPS_DATES = [
+        [/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}/, '%FT%T.%L%z'],
+        [/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, '%FT%T%z'],
+        [/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}/, '%F %T.%L'],
+        [/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/, '%F %T'],
+        [%r{\d{2}/[a-zA-Z]+/\d{4}:\d{2}:\d{2}:\d{2}}, '%d/%b/%Y:%H:%M:%S %z']
+      ].freeze
+
+      def ow_parse_time(str)
+        return nil if str.nil?
+
+        REGEXPS_DATES.each do |pattern, format|
+          if str.match(pattern)
+            return DateTime.strptime(str, format).to_time.to_i
+          end
+        end
+        DateTime.strptime(str).to_time.to_i
+      rescue ArgumentError => e
+        log.warn "#{e}, time str: #{str}"
+      end
+
+      def ow_parse_logs(text)
+        if text[0] == "{"
+          begin
+            return JSON.parse(text)
+          rescue JSON::ParserError
+            #byebug
+          end
+        end
+
+        REGEXPS_LOGS.each do |r|
+          m = text.match(r)
+          next unless m
+
+          return m.named_captures
+        end
+
+        if text.match(/^(?:[a-zA-Z0-9]+=(?:\"[^"]*\"|\S*) ?)+/)
+          return Logfmt.parse(text)
+        end
+
+        { 'msg' => text }
+      end
+
+      def filter(_tag, _time, record)
+        log.trace { "filter_logs: (#{record.class}) #{record.inspect}" }
+        if record['log']
+          record = record.merge(ow_parse_logs(record['log']))
+          record.delete('log')
+          record['time'] = ow_parse_time(record['time']) if record['time']
+        end
         record
       end
     end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 #
 # Copyright 2020- Camille Meulien
 #
@@ -16,19 +18,21 @@
 require 'json'
 require 'date'
 require 'logfmt'
-require "fluent/plugin/filter"
+require 'fluent/plugin/filter'
 
 module Fluent
   module Plugin
     class LogsFilter < Filter
-      Fluent::Plugin.register_filter("logs", self)
+      Fluent::Plugin.register_filter('logs', self)
       REGEXPS_LOGS = [
-        /^(?<upstream_ip>\S+) - - \[(?<time>\S+ \+\d{4})\] "(?<request>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)" "(?<user_ip>[^"]+)"$/,
-        /^\[[^\]]+\] (?<upstream_ip>\S+) - [^ ]+ \[(?<time>[^\]]+)\] "(?<request>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)"/,
-        /^(?<time>\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\S+) \[(?<level>[^\]]+)\] (?<msg>.*)/
+        /^(?<upstream_ip>\S+) - - \[(?<time>\S+ \+\d{4})\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)" "(?<user_ip>[^"]+)"$/,
+        /^\[[^\]]+\] (?<upstream_ip>\S+) - [^ ]+ \[(?<time>[^\]]+)\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)"/,
+        /^(?<time>\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\S+) \[(?<level>[^\]]+)\] (?<message>.*)/,
+        /^.. \[(?<time>[^\]]+?)( \#\d+)?\] +(?<level>\S+) -- : (?<message>.*)$/
       ].freeze
 
       REGEXPS_DATES = [
+        [/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}/, '%FT%T.%L'],
         [/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}/, '%FT%T.%L%z'],
         [/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, '%FT%T%z'],
         [/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}/, '%F %T.%L'],
@@ -50,11 +54,11 @@ module Fluent
       end
 
       def ow_parse_logs(text)
-        if text[0] == "{"
+        if text[0] == '{'
           begin
             return JSON.parse(text)
           rescue JSON::ParserError
-            #byebug
+            # byebug
           end
         end
 
@@ -69,15 +73,38 @@ module Fluent
           return Logfmt.parse(text)
         end
 
-        { 'msg' => text }
+        {}
+      end
+
+      RENAME_MAP = [
+        %w[msg message],
+        %w[lvl level]
+      ].freeze
+
+      def ow_post_process(record)
+        text = record['log']
+        record.delete('log')
+
+        RENAME_MAP.each do |src, dst|
+          if record[src] && record[dst].nil?
+            record[dst] = record[src]
+            record.delete(src)
+          end
+        end
+        record['message'] ||= text
+        return record
       end
 
       def filter(_tag, _time, record)
         log.trace { "filter_logs: (#{record.class}) #{record.inspect}" }
         if record['log']
           record = record.merge(ow_parse_logs(record['log']))
-          record.delete('log')
-          record['time'] = ow_parse_time(record['time']) if record['time']
+          record = ow_post_process(record)
+
+          if record['time']
+            record['timestamp'] = ow_parse_time(record['time'])
+            record.delete('time')
+          end
         end
         record
       end

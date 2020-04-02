@@ -25,10 +25,12 @@ module Fluent
     class LogsFilter < Filter
       Fluent::Plugin.register_filter('logs', self)
       REGEXPS_LOGS = [
-        /^(?<upstream_ip>\S+) - - \[(?<time>\S+ \+\d{4})\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)" "(?<user_ip>[^"]+)"$/,
-        /^\[[^\]]+\] (?<upstream_ip>\S+) - [^ ]+ \[(?<time>[^\]]+)\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)"/,
-        /^(?<time>\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\S+) \[(?<level>[^\]]+)\] (?<message>.*)/,
-        /^.. \[(?<time>[^\]]+?)( \#\d+)?\] +(?<level>\S+) -- : (?<message>.*)$/
+        [/^(?<upstream_ip>\S+) - - \[(?<time>\S+ \+\d{4})\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)" "(?<user_ip>[^"]+)"$/],
+        [/^\[[^\]]+\] (?<upstream_ip>\S+) - [^ ]+ \[(?<time>[^\]]+)\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)"/],
+        [/^(?<time>\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\S+) \[(?<level>[^\]]+)\] (?<message>.*)/],
+        [/^.. \[(?<time>[^\]]+?)( \#\d+)?\] +(?<level>\S+) -- : (?<message>.*)$/],
+        [/^(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC (?<message>Imported.*)$/, { 'level' => 'INFO' }],
+        [/^ranger_\S+: \d+$/, { 'level' => 'INFO' }]
       ].freeze
 
       REGEXPS_DATES = [
@@ -62,11 +64,13 @@ module Fluent
           end
         end
 
-        REGEXPS_LOGS.each do |r|
+        REGEXPS_LOGS.each do |r, additional|
           m = text.match(r)
           next unless m
 
-          return m.named_captures
+          record = m.named_captures
+          record.merge!(additional) if additional
+          return record
         end
 
         if text.match(/^(?:[a-zA-Z0-9]+=(?:\"[^"]*\"|\S*) ?)+/)

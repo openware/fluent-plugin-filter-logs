@@ -141,22 +141,6 @@ class LogsFilterTest < Test::Unit::TestCase
     assert_equal(expected, filter(messages))
   end
 
-  test 'json ranger logs (prometheus format unmanaged)' do
-    text = '{"log":"ranger_connections_total{auth=\"public\"}: 3","container_id":"545d74a168d","container_name":"/demo_ranger_1","source":"stderr"}'
-    messages = [
-      JSON.parse(text)
-    ]
-    expected = [
-      {
-        'container_id' => '545d74a168d',
-        'container_name' => '/demo_ranger_1',
-        'message' => 'ranger_connections_total{auth="public"}: 3',
-        'source' => 'stderr'
-      }
-    ]
-    assert_equal(expected, filter(messages))
-  end
-
   test 'json rabbitmq logs' do
     text = '{"source":"stdout","log":"2020-03-30 09:54:51.627 [info] <0.734.0> connection <0.734.0> (192.168.128.5:49388 -> 192.168.128.4:5672): user \'guest\' authenticated and granted access to vhost \'/\'","container_id":"40b5e1bde","container_name":"/dev01_rabbitmq_1"}'
     messages = [
@@ -271,6 +255,61 @@ class LogsFilterTest < Test::Unit::TestCase
         'source' => 'stderr',
         'level' => 'INFO',
         'timestamp' => 1_585_766_820
+      }
+    ]
+    assert_equal(expected, filter(messages))
+  end
+
+  test 'json parity (block imported)' do
+    text = '{"container_id":"7d3ac22","container_name":"/dev01_parity_1","source":"stderr","log":"2020-04-02 08:00:53 UTC Imported #17687037 0x1a19…2231 (6 txs, 3.60 Mgas, 52 ms, 1.41 KiB) + another 1 block(s) containing 4 tx(s)"}'
+    messages = [
+      JSON.parse(text)
+    ]
+
+    expected = [
+      {
+        'container_id' => '7d3ac22',
+        'container_name' => '/dev01_parity_1',
+        'message' => 'Imported #17687037 0x1a19…2231 (6 txs, 3.60 Mgas, 52 ms, 1.41 KiB) + another 1 block(s) containing 4 tx(s)',
+        'source' => 'stderr',
+        'level' => 'INFO',
+        'timestamp' => 1_585_814_453
+      }
+    ]
+    assert_equal(expected, filter(messages))
+  end
+
+  test 'json ranger metrics 1' do
+    text = '{"container_id":"7d3ac22","container_name":"/dev01_ranger_1","source":"stderr","log":"ranger_connections_total{auth=\\"public\\"}: 44"}'
+    messages = [
+      JSON.parse(text)
+    ]
+
+    expected = [
+      {
+        'container_id' => '7d3ac22',
+        'container_name' => '/dev01_ranger_1',
+        'message' => 'ranger_connections_total{auth="public"}: 44',
+        'source' => 'stderr',
+        'level' => 'INFO'
+      }
+    ]
+    assert_equal(expected, filter(messages))
+  end
+
+  test 'json ranger metrics 2' do
+    text = '{"container_id":"7d3ac22","container_name":"/dev01_ranger_1","source":"stderr","log":"ranger_subscriptions_current: 0"}'
+    messages = [
+      JSON.parse(text)
+    ]
+
+    expected = [
+      {
+        'container_id' => '7d3ac22',
+        'container_name' => '/dev01_ranger_1',
+        'message' => 'ranger_subscriptions_current: 0',
+        'source' => 'stderr',
+        'level' => 'INFO'
       }
     ]
     assert_equal(expected, filter(messages))

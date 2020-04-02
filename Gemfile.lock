@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fluent-plugin-filter-logs (1.0.3)
+    fluent-plugin-filter-logs (1.0.4)
       fluentd (>= 0.14.10, < 2)
       logfmt (~> 0.0.9)
 

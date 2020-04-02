@@ -29,7 +29,7 @@ module Fluent
         [/^\[[^\]]+\] (?<upstream_ip>\S+) - [^ ]+ \[(?<time>[^\]]+)\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)"/],
         [/^(?<time>\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\S+) \[(?<level>[^\]]+)\] (?<message>.*)/],
         [/^.. \[(?<time>[^\]]+?)( \#\d+)?\] +(?<level>\S+) -- : (?<message>.*)$/],
-        [/^(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC (?<message>(?:\S+ ){1,2}#\d+ (?<level>\S+) import (?<peers>\d+)\/(?<peers_max>\d+) peers? .*)$/,
+        [%r{^(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC (?<message>(?:\S+ ){1,2}#\d+ (?<level>\S+) import (?<peers>\d+)/(?<peers_max>\d+) peers? .*)$},
          lambda do |r|
            ratio = r['peers'].to_f / r['peers_max'].to_f
            l = ratio <= 0.1 ? 'ERROR' : ratio <= 0.2 ? 'WARN' : 'INFO'
@@ -94,8 +94,13 @@ module Fluent
         %w[lvl level]
       ].freeze
 
-      UPCASE_LIST = [
-        'level'
+      FORMATTERS = [
+        ['level', lambda do |value|
+          return 'WARN' if value.match(/warning/i)
+          return 'INFO' if value.match(/note/i)
+
+          value.upcase
+        end]
       ].freeze
 
       def ow_post_process(record)
@@ -109,8 +114,8 @@ module Fluent
           end
         end
 
-        UPCASE_LIST.each do |k|
-          record[k] = record[k].upcase if record[k]
+        FORMATTERS.each do |k, formatter|
+          record[k] = formatter.call(record[k]) if record[k]
         end
 
         record['message'] ||= text
@@ -119,14 +124,20 @@ module Fluent
 
       def filter(_tag, _time, record)
         log.trace { "filter_logs: (#{record.class}) #{record.inspect}" }
-        if record['log']
-          record = record.merge(ow_parse_logs(record['log']))
-          record = ow_post_process(record)
-
-          if record['time']
-            record['timestamp'] = ow_parse_time(record['time'])
-            record.delete('time')
+        unless record['log']
+          if record['data']
+            record['level'] = 'DEBUG'
+            record['message'] = JSON.dump(record.delete('data'))
           end
+          return record
+        end
+
+        record = record.merge(ow_parse_logs(record['log']))
+        record = ow_post_process(record)
+
+        if record['time']
+          record['timestamp'] = ow_parse_time(record['time'])
+          record.delete('time')
         end
         record
       end

@@ -109,7 +109,7 @@ class LogsFilterTest < Test::Unit::TestCase
   end
 
   test 'json vault logs (with level)' do
-    text = '{"container_name":"/demo_vault_1","source":"stderr","log":"2020-03-30T09:53:21.323Z [WARN]  no `api_addr` value specified in config or in VAULT_API_ADDR; falling back to detection if possible, but this value should be manually set","container_id":"4f82763814e"}'
+    text = '{"container_name":"/demo_vault_1","source":"stderr","log":"2020-03-30T09:53:21.323Z [WARNING]  no `api_addr` value specified in config or in VAULT_API_ADDR; falling back to detection if possible, but this value should be manually set","container_id":"4f82763814e"}'
     messages = [
       JSON.parse(text)
     ]
@@ -143,7 +143,7 @@ class LogsFilterTest < Test::Unit::TestCase
   end
 
   test 'json rabbitmq logs' do
-    text = '{"source":"stdout","log":"2020-03-30 09:54:51.627 [info] <0.734.0> connection <0.734.0> (192.168.128.5:49388 -> 192.168.128.4:5672): user \'guest\' authenticated and granted access to vhost \'/\'","container_id":"40b5e1bde","container_name":"/dev01_rabbitmq_1"}'
+    text = '{"source":"stdout","log":"2020-03-30 09:54:51.627 [note] <0.734.0> connection <0.734.0> (192.168.128.5:49388 -> 192.168.128.4:5672): user \'guest\' authenticated and granted access to vhost \'/\'","container_id":"40b5e1bde","container_name":"/dev01_rabbitmq_1"}'
     messages = [
       JSON.parse(text)
     ]
@@ -374,6 +374,26 @@ class LogsFilterTest < Test::Unit::TestCase
         'message' => 'ranger_subscriptions_current: 0',
         'source' => 'stderr',
         'level' => 'INFO'
+      }
+    ]
+    assert_equal(expected, filter(messages))
+  end
+
+  test 'json rails grappe debug logs' do
+    text = '{"container_id":"7d3ac22","container_name":"/demo_barong_1","source":"stdout","date":"2020-04-02T14:05:44.550+00:00","severity":"WARN","data":{"status":200,"time":{"total":3.09,"db":0.71,"view":2.38},"method":"DELETE","path":"/api/v2/identity/sessions","params":{},"host":"wiprex.openware.work","response":[200],"ip":"","ua":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97","headers":{"Version":"HTTP/1.1","Host":"wiprex.openware.work","User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97","Accept":"application/json, text/plain, */*","Accept-Encoding":"gzip, deflate, br","Accept-Language":"en-GB,en-US;q=0.9,en;q=0.8","Cookie":"_ga=GA1.2.234775274.1582223639; _barong_session=1c67047cf6e58f69ec75eed56c66d652","Origin":"https://wiprex.openware.work","Referer":"https://wiprex.openware.work/tower/users/user-directory/IDBA90D58E76/main","Sec-Fetch-Dest":"empty","Sec-Fetch-Mode":"cors","Sec-Fetch-Site":"same-origin","X-Forwarded-For":"","X-Forwarded-Host":"wiprex.openware.work","X-Forwarded-Port":"443","X-Forwarded-Proto":"https","X-Forwarded-Server":"2caa236b7c38","X-Real-Ip":"93.73.59.123","X-Request-Id":"855cfd0a-2796-4bc1-a5a9-2c5e776bcdaa","X-Envoy-Expected-Rq-Timeout-Ms":"15000","X-Envoy-Original-Path":"/api/v2/barong/identity/sessions"}},"message":"{\"date\":\"2020-04-02T14:05:44.550+00:00\",\"severity\":\"WARN\",\"data\":{\"status\":200,\"time\":{\"total\":3.09,\"db\":0.71,\"view\":2.38},\"method\":\"DELETE\",\"path\":\"/api/v2/identity/sessions\",\"params\":{},\"host\":\"wiprex.openware.work\",\"response\":[200],\"ip\":\"\",\"ua\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97\",\"headers\":{\"Version\":\"HTTP/1.1\",\"Host\":\"wiprex.openware.work\",\"User-Agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97\",\"Accept\":\"application/json, text/plain, */*\",\"Accept-Encoding\":\"gzip, deflate, br\",\"Accept-Language\":\"en-GB,en-US;q=0.9,en;q=0.8\",\"Cookie\":\"_ga=GA1.2.234775274.1582223639; _barong_session=1c67047cf6e58f69ec75eed56c66d652\",\"Origin\":\"https://wiprex.openware.work\",\"Referer\":\"https://wiprex.openware.work/tower/users/user-directory/IDBA90D58E76/main\",\"Sec-Fetch-Dest\":\"empty\",\"Sec-Fetch-Mode\":\"cors\",\"Sec-Fetch-Site\":\"same-origin\",\"X-Forwarded-For\":\"\",\"X-Forwarded-Host\":\"wiprex.openware.work\",\"X-Forwarded-Port\":\"443\",\"X-Forwarded-Proto\":\"https\",\"X-Forwarded-Server\":\"2caa236b7c38\",\"X-Real-Ip\":\"93.73.59.123\",\"X-Request-Id\":\"855cfd0a-2796-4bc1-a5a9-2c5e776bcdaa\",\"X-Envoy-Expected-Rq-Timeout-Ms\":\"15000\",\"X-Envoy-Original-Path\":\"/api/v2/barong/identity/sessions\"}}}"}'
+    messages = [
+      JSON.parse(text)
+    ]
+
+    expected = [
+      {
+        'container_id' => '7d3ac22',
+        'container_name' => '/demo_barong_1',
+        'date' => '2020-04-02T14:05:44.550+00:00',
+        'level' => 'DEBUG',
+        'message' => '{"status":200,"time":{"total":3.09,"db":0.71,"view":2.38},"method":"DELETE","path":"/api/v2/identity/sessions","params":{},"host":"wiprex.openware.work","response":[200],"ip":"","ua":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97","headers":{"Version":"HTTP/1.1","Host":"wiprex.openware.work","User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97","Accept":"application/json, text/plain, */*","Accept-Encoding":"gzip, deflate, br","Accept-Language":"en-GB,en-US;q=0.9,en;q=0.8","Cookie":"_ga=GA1.2.234775274.1582223639; _barong_session=1c67047cf6e58f69ec75eed56c66d652","Origin":"https://wiprex.openware.work","Referer":"https://wiprex.openware.work/tower/users/user-directory/IDBA90D58E76/main","Sec-Fetch-Dest":"empty","Sec-Fetch-Mode":"cors","Sec-Fetch-Site":"same-origin","X-Forwarded-For":"","X-Forwarded-Host":"wiprex.openware.work","X-Forwarded-Port":"443","X-Forwarded-Proto":"https","X-Forwarded-Server":"2caa236b7c38","X-Real-Ip":"93.73.59.123","X-Request-Id":"855cfd0a-2796-4bc1-a5a9-2c5e776bcdaa","X-Envoy-Expected-Rq-Timeout-Ms":"15000","X-Envoy-Original-Path":"/api/v2/barong/identity/sessions"}}',
+        'source' => 'stdout',
+        'severity' => 'WARN'
       }
     ]
     assert_equal(expected, filter(messages))

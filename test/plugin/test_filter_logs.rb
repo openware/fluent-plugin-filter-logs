@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'byebug'
 require 'helper'
 require 'fluent/plugin/filter_logs.rb'
 
@@ -261,7 +262,7 @@ class LogsFilterTest < Test::Unit::TestCase
   end
 
   test 'json parity (block imported)' do
-    text = '{"container_id":"7d3ac22","container_name":"/dev01_parity_1","source":"stderr","log":"2020-04-02 08:00:53 UTC Imported #17687037 0x1a19…2231 (6 txs, 3.60 Mgas, 52 ms, 1.41 KiB) + another 1 block(s) containing 4 tx(s)"}'
+    text = '{"container_id":"7d3ac22","container_name":"/dev01_parity_1","source":"stderr","log":"2020-04-02 08:00:53 UTC Verifier #7 INFO import Imported #17687508 0xf356…d999 (0 txs, 0.00 Mgas, 1 ms, 0.58 KiB) + another 1 block(s) containing 0 tx(s)"}'
     messages = [
       JSON.parse(text)
     ]
@@ -270,9 +271,72 @@ class LogsFilterTest < Test::Unit::TestCase
       {
         'container_id' => '7d3ac22',
         'container_name' => '/dev01_parity_1',
-        'message' => 'Imported #17687037 0x1a19…2231 (6 txs, 3.60 Mgas, 52 ms, 1.41 KiB) + another 1 block(s) containing 4 tx(s)',
+        'message' => 'Verifier #7 INFO import Imported #17687508 0xf356…d999 (0 txs, 0.00 Mgas, 1 ms, 0.58 KiB) + another 1 block(s) containing 0 tx(s)',
         'source' => 'stderr',
         'level' => 'INFO',
+        'timestamp' => 1_585_814_453
+      }
+    ]
+    assert_equal(expected, filter(messages))
+  end
+
+  test 'json parity (peer report ok)' do
+    text = '{"container_id":"7d3ac22","container_name":"/dev01_parity_1","source":"stderr","log":"2020-04-02 08:00:53 UTC IO Worker #0 INFO import 19/50 peers 6 MiB chain 10 MiB db 0 bytes queue 19 KiB sync RPC: 0 conn, 122 req/s, 856 µs"}'
+    messages = [
+      JSON.parse(text)
+    ]
+
+    expected = [
+      {
+        'container_id' => '7d3ac22',
+        'container_name' => '/dev01_parity_1',
+        'message' => 'IO Worker #0 INFO import 19/50 peers 6 MiB chain 10 MiB db 0 bytes queue 19 KiB sync RPC: 0 conn, 122 req/s, 856 µs',
+        'peers' => '19',
+        'peers_max' => '50',
+        'source' => 'stderr',
+        'level' => 'INFO',
+        'timestamp' => 1_585_814_453
+      }
+    ]
+    assert_equal(expected, filter(messages))
+  end
+
+  test 'json parity (peer report warn)' do
+    text = '{"container_id":"7d3ac22","container_name":"/dev01_parity_1","source":"stderr","log":"2020-04-02 08:00:53 UTC IO Worker #0 INFO import 10/50 peers 6 MiB chain 10 MiB db 0 bytes queue 19 KiB sync RPC: 0 conn, 122 req/s, 856 µs"}'
+    messages = [
+      JSON.parse(text)
+    ]
+
+    expected = [
+      {
+        'container_id' => '7d3ac22',
+        'container_name' => '/dev01_parity_1',
+        'message' => 'IO Worker #0 INFO import 10/50 peers 6 MiB chain 10 MiB db 0 bytes queue 19 KiB sync RPC: 0 conn, 122 req/s, 856 µs',
+        'peers' => '10',
+        'peers_max' => '50',
+        'source' => 'stderr',
+        'level' => 'WARN',
+        'timestamp' => 1_585_814_453
+      }
+    ]
+    assert_equal(expected, filter(messages))
+  end
+
+  test 'json parity (peer report error)' do
+    text = '{"container_id":"7d3ac22","container_name":"/dev01_parity_1","source":"stderr","log":"2020-04-02 08:00:53 UTC IO Worker #0 INFO import 5/50 peers 6 MiB chain 10 MiB db 0 bytes queue 19 KiB sync RPC: 0 conn, 122 req/s, 856 µs"}'
+    messages = [
+      JSON.parse(text)
+    ]
+
+    expected = [
+      {
+        'container_id' => '7d3ac22',
+        'container_name' => '/dev01_parity_1',
+        'message' => 'IO Worker #0 INFO import 5/50 peers 6 MiB chain 10 MiB db 0 bytes queue 19 KiB sync RPC: 0 conn, 122 req/s, 856 µs',
+        'peers' => '5',
+        'peers_max' => '50',
+        'source' => 'stderr',
+        'level' => 'ERROR',
         'timestamp' => 1_585_814_453
       }
     ]

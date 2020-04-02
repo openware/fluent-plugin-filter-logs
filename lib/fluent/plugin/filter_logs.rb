@@ -29,7 +29,13 @@ module Fluent
         [/^\[[^\]]+\] (?<upstream_ip>\S+) - [^ ]+ \[(?<time>[^\]]+)\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)"/],
         [/^(?<time>\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\S+) \[(?<level>[^\]]+)\] (?<message>.*)/],
         [/^.. \[(?<time>[^\]]+?)( \#\d+)?\] +(?<level>\S+) -- : (?<message>.*)$/],
-        [/^(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC (?<message>Imported.*)$/, { 'level' => 'INFO' }],
+        [/^(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC (?<message>(?:\S+ ){1,2}#\d+ (?<level>\S+) import (?<peers>\d+)\/(?<peers_max>\d+) peers? .*)$/,
+         lambda do |r|
+           ratio = r['peers'].to_f / r['peers_max'].to_f
+           l = ratio <= 0.1 ? 'ERROR' : ratio <= 0.2 ? 'WARN' : 'INFO'
+           return { 'level' => l }
+         end],
+        [/^(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC (?<message>(?:\S+ ){1,2}#\d+ (?<level>\S+) .*)$/],
         [/^ranger_\S+: \d+$/, { 'level' => 'INFO' }]
       ].freeze
 
@@ -69,7 +75,10 @@ module Fluent
           next unless m
 
           record = m.named_captures
-          record.merge!(additional) if additional
+          if additional
+            record.merge!(additional) if additional.is_a?(Hash)
+            record.merge!(additional.call(record)) if additional.is_a?(Proc)
+          end
           return record
         end
 

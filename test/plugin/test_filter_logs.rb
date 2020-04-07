@@ -57,7 +57,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'message' => 'Filtering disabled container',
         'providerName' => 'docker',
         'container' => 'deposit-collection-edge-11facecb13',
-        'timestamp' => 1_585_644_404
+        'time' => '2020-03-31T08:46:44Z'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -76,8 +76,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'referer' => 'https://demo.openware.work/trading/copyright/batusdt',
         'message' => 'GET /static/media/search.f6cf3254.svg HTTP/1.1',
         'source' => 'stdout',
-        'status_code' => '200',
-        'timestamp' => 1_585_337_178,
+        'status_code' => 200,
         'upstream_ip' => '192.168.80.32',
         'user_agent' => 'Mozilla/5.0 (Linux; Android 8.0.0; SAMSUNG SM-J330FN/J330FNXXS3BSE1) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/11.1 Chrome/75.0.3770.143 Mobile Safari/537.36',
         'user_ip' => '123.456.789.0'
@@ -99,8 +98,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'referer' => '-',
         'message' => 'GET /query?db=peatio_production&epoch=s&p=%5BREDACTED%5D&precision=s&q=SELECT+%2A+FROM+candles_3d+WHERE+market%3D%27ethusd%27+ORDER+BY+desc+LIMIT+1 HTTP/1.1',
         'source' => 'stderr',
-        'status_code' => '200',
-        'timestamp' => 1_585_643_218,
+        'status_code' => 200,
         'upstream_ip' => '192.168.128.5',
         'user_agent' => 'Ruby'
       }
@@ -119,8 +117,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'container_name' => '/demo_vault_1',
         'level' => 'WARN',
         'message' => ' no `api_addr` value specified in config or in VAULT_API_ADDR; falling back to detection if possible, but this value should be manually set',
-        'source' => 'stderr',
-        'timestamp' => 1_585_562_001
+        'source' => 'stderr'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -154,8 +151,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'container_name' => '/dev01_rabbitmq_1',
         'message' => '<0.734.0> connection <0.734.0> (192.168.128.5:49388 -> 192.168.128.4:5672): user \'guest\' authenticated and granted access to vhost \'/\'',
         'source' => 'stdout',
-        'level' => 'INFO',
-        'timestamp' => 1_585_562_091
+        'level' => 'INFO'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -174,7 +170,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'message' => '#<Peatio::Blockchain::ClientError: Failed to open TCP connection to parity:8545 (getaddrinfo: Name or service not known)>',
         'source' => 'stderr',
         'level' => 'ERROR',
-        'timestamp' => 1_585_691_645
+        'time' => '2020-03-31 21:54:05'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -198,7 +194,7 @@ class LogsFilterTest < Test::Unit::TestCase
           "/home/app/app/workers/daemons/blockchain.rb:9:in `block (3 levels) in run'",
         'source' => 'stderr',
         'level' => 'ERROR',
-        'timestamp' => 1_585_691_756
+        'time' => '2020-03-31 21:55:56'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -216,8 +212,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'container_name' => '/dev01_blockchain_1',
         'message' => 'received websocket message: [156,"te",[431756335,1585746269293,0.6,131.83]]',
         'source' => 'stderr',
-        'level' => 'DEBUG',
-        'timestamp' => 1_585_746_270
+        'level' => 'DEBUG'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -235,8 +230,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'container_name' => '/dev01_blockchain_1',
         'message' => 'Publishing trade event: {"tid"=>431756335, "amount"=>0.6e0, "price"=>131.83, "date"=>1585746269, "taker_type"=>"buy"}',
         'source' => 'stderr',
-        'level' => 'INFO',
-        'timestamp' => 1_585_746_270
+        'level' => 'INFO'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -254,8 +248,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'container_name' => '/dev01_blockchain_1',
         'message' => '[3ce041fb-32f9-462b-950b-34e1ba4904f7] Completed 200 OK in 7ms (Views: 5.6ms | Allocations: 6356)',
         'source' => 'stderr',
-        'level' => 'INFO',
-        'timestamp' => 1_585_766_820
+        'level' => 'INFO'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -273,8 +266,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'container_name' => '/dev01_parity_1',
         'message' => 'Verifier #7 INFO import Imported #17687508 0xf356…d999 (0 txs, 0.00 Mgas, 1 ms, 0.58 KiB) + another 1 block(s) containing 0 tx(s)',
         'source' => 'stderr',
-        'level' => 'INFO',
-        'timestamp' => 1_585_814_453
+        'level' => 'INFO'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -294,8 +286,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'peers' => '19',
         'peers_max' => '50',
         'source' => 'stderr',
-        'level' => 'INFO',
-        'timestamp' => 1_585_814_453
+        'level' => 'INFO'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -315,8 +306,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'peers' => '10',
         'peers_max' => '50',
         'source' => 'stderr',
-        'level' => 'WARN',
-        'timestamp' => 1_585_814_453
+        'level' => 'WARN'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -336,8 +326,7 @@ class LogsFilterTest < Test::Unit::TestCase
         'peers' => '5',
         'peers_max' => '50',
         'source' => 'stderr',
-        'level' => 'ERROR',
-        'timestamp' => 1_585_814_453
+        'level' => 'ERROR'
       }
     ]
     assert_equal(expected, filter(messages))
@@ -379,8 +368,8 @@ class LogsFilterTest < Test::Unit::TestCase
     assert_equal(expected, filter(messages))
   end
 
-  test 'json rails grappe debug logs' do
-    text = '{"container_id":"7d3ac22","container_name":"/demo_barong_1","source":"stdout","date":"2020-04-02T14:05:44.550+00:00","severity":"WARN","data":{"status":200,"time":{"total":3.09,"db":0.71,"view":2.38},"method":"DELETE","path":"/api/v2/identity/sessions","params":{},"host":"wiprex.openware.work","response":[200],"ip":"","ua":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97","headers":{"Version":"HTTP/1.1","Host":"wiprex.openware.work","User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97","Accept":"application/json, text/plain, */*","Accept-Encoding":"gzip, deflate, br","Accept-Language":"en-GB,en-US;q=0.9,en;q=0.8","Cookie":"_ga=GA1.2.234775274.1582223639; _barong_session=1c67047cf6e58f69ec75eed56c66d652","Origin":"https://wiprex.openware.work","Referer":"https://wiprex.openware.work/tower/users/user-directory/IDBA90D58E76/main","Sec-Fetch-Dest":"empty","Sec-Fetch-Mode":"cors","Sec-Fetch-Site":"same-origin","X-Forwarded-For":"","X-Forwarded-Host":"wiprex.openware.work","X-Forwarded-Port":"443","X-Forwarded-Proto":"https","X-Forwarded-Server":"2caa236b7c38","X-Real-Ip":"93.73.59.123","X-Request-Id":"855cfd0a-2796-4bc1-a5a9-2c5e776bcdaa","X-Envoy-Expected-Rq-Timeout-Ms":"15000","X-Envoy-Original-Path":"/api/v2/barong/identity/sessions"}},"message":"{\"date\":\"2020-04-02T14:05:44.550+00:00\",\"severity\":\"WARN\",\"data\":{\"status\":200,\"time\":{\"total\":3.09,\"db\":0.71,\"view\":2.38},\"method\":\"DELETE\",\"path\":\"/api/v2/identity/sessions\",\"params\":{},\"host\":\"wiprex.openware.work\",\"response\":[200],\"ip\":\"\",\"ua\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97\",\"headers\":{\"Version\":\"HTTP/1.1\",\"Host\":\"wiprex.openware.work\",\"User-Agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97\",\"Accept\":\"application/json, text/plain, */*\",\"Accept-Encoding\":\"gzip, deflate, br\",\"Accept-Language\":\"en-GB,en-US;q=0.9,en;q=0.8\",\"Cookie\":\"_ga=GA1.2.234775274.1582223639; _barong_session=1c67047cf6e58f69ec75eed56c66d652\",\"Origin\":\"https://wiprex.openware.work\",\"Referer\":\"https://wiprex.openware.work/tower/users/user-directory/IDBA90D58E76/main\",\"Sec-Fetch-Dest\":\"empty\",\"Sec-Fetch-Mode\":\"cors\",\"Sec-Fetch-Site\":\"same-origin\",\"X-Forwarded-For\":\"\",\"X-Forwarded-Host\":\"wiprex.openware.work\",\"X-Forwarded-Port\":\"443\",\"X-Forwarded-Proto\":\"https\",\"X-Forwarded-Server\":\"2caa236b7c38\",\"X-Real-Ip\":\"93.73.59.123\",\"X-Request-Id\":\"855cfd0a-2796-4bc1-a5a9-2c5e776bcdaa\",\"X-Envoy-Expected-Rq-Timeout-Ms\":\"15000\",\"X-Envoy-Original-Path\":\"/api/v2/barong/identity/sessions\"}}}"}'
+  test 'container json logs: rails grape debug logs' do
+    text = '{"container_id":"7d3ac22","container_name":"/demo_nginx-ingress-controller_1","source":"stderr","log":"{\"date\":\"2020-04-07T08:54:04.892+00:00\",\"severity\":\"WARN\",\"data\":{\"status\":200,\"time\":{\"total\":0.49,\"db\":0,\"view\":0.49},\"method\":\"GET\",\"path\":\"/api/v2/identity/ping\",\"params\":{},\"host\":\"10.24.0.4\",\"response\":[{\"ping\":\"pong\"}],\"ip\":\"\",\"ua\":\"kube-probe/1.14+\",\"headers\":{\"Version\":\"HTTP/1.1\",\"Host\":\"10.24.0.4:8080\",\"User-Agent\":\"kube-probe/1.14+\",\"Accept-Encoding\":\"gzip\",\"Connection\":\"close\",\"X-Forwarded-For\":\"\"}}}"}'
     messages = [
       JSON.parse(text)
     ]
@@ -388,12 +377,67 @@ class LogsFilterTest < Test::Unit::TestCase
     expected = [
       {
         'container_id' => '7d3ac22',
-        'container_name' => '/demo_barong_1',
-        'date' => '2020-04-02T14:05:44.550+00:00',
-        'level' => 'DEBUG',
-        'message' => '{"status":200,"time":{"total":3.09,"db":0.71,"view":2.38},"method":"DELETE","path":"/api/v2/identity/sessions","params":{},"host":"wiprex.openware.work","response":[200],"ip":"","ua":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97","headers":{"Version":"HTTP/1.1","Host":"wiprex.openware.work","User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36 OPR/67.0.3575.97","Accept":"application/json, text/plain, */*","Accept-Encoding":"gzip, deflate, br","Accept-Language":"en-GB,en-US;q=0.9,en;q=0.8","Cookie":"_ga=GA1.2.234775274.1582223639; _barong_session=1c67047cf6e58f69ec75eed56c66d652","Origin":"https://wiprex.openware.work","Referer":"https://wiprex.openware.work/tower/users/user-directory/IDBA90D58E76/main","Sec-Fetch-Dest":"empty","Sec-Fetch-Mode":"cors","Sec-Fetch-Site":"same-origin","X-Forwarded-For":"","X-Forwarded-Host":"wiprex.openware.work","X-Forwarded-Port":"443","X-Forwarded-Proto":"https","X-Forwarded-Server":"2caa236b7c38","X-Real-Ip":"93.73.59.123","X-Request-Id":"855cfd0a-2796-4bc1-a5a9-2c5e776bcdaa","X-Envoy-Expected-Rq-Timeout-Ms":"15000","X-Envoy-Original-Path":"/api/v2/barong/identity/sessions"}}',
-        'source' => 'stdout',
-        'severity' => 'WARN'
+        'container_name' => '/demo_nginx-ingress-controller_1',
+        'message' => '{"status":200,"time":{"total":0.49,"db":0,"view":0.49},"method":"GET","path":"/api/v2/identity/ping","params":{},"host":"10.24.0.4","response":[{"ping":"pong"}],"ip":"","ua":"kube-probe/1.14+","headers":{"Version":"HTTP/1.1","Host":"10.24.0.4:8080","User-Agent":"kube-probe/1.14+","Accept-Encoding":"gzip","Connection":"close","X-Forwarded-For":""}}',
+        'source' => 'stderr',
+        'status_code' => 200,
+        'date' => '2020-04-07T08:54:04.892+00:00',
+        'severity' => 'WARN',
+        'level' => 'DEBUG'
+      }
+    ]
+    assert_equal(expected, filter(messages))
+  end
+
+  test 'container json logs: nginx-ingress-controller INFO' do
+    text = '{"container_id":"7d3ac22","container_name":"/demo_nginx-ingress-controller_1","source":"stderr","log":"I0406 13:28:52.745452 12 store.go:447] secret core-app/demo-openware-com-tls was updated and it is used in ingress annotations. Parsing..."}'
+    messages = [
+      JSON.parse(text)
+    ]
+
+    expected = [
+      {
+        'container_id' => '7d3ac22',
+        'container_name' => '/demo_nginx-ingress-controller_1',
+        'message' => '12 store.go:447] secret core-app/demo-openware-com-tls was updated and it is used in ingress annotations. Parsing...',
+        'source' => 'stderr',
+        'level' => 'INFO'
+      }
+    ]
+    assert_equal(expected, filter(messages))
+  end
+
+  test 'container json logs: nginx-ingress-controller WARN' do
+    text = '{"container_id":"7d3ac22","container_name":"/demo_nginx-ingress-controller_1","source":"stderr","log":"W0406 13:28:52.746053      12 backend_ssl.go:46] Error obtaining X.509 certificate: unexpected error creating SSL Cert: certificate and private key does not have a matching public key: tls: private key does not match public key"}'
+    messages = [
+      JSON.parse(text)
+    ]
+
+    expected = [
+      {
+        'container_id' => '7d3ac22',
+        'container_name' => '/demo_nginx-ingress-controller_1',
+        'message' => '12 backend_ssl.go:46] Error obtaining X.509 certificate: unexpected error creating SSL Cert: certificate and private key does not have a matching public key: tls: private key does not match public key',
+        'source' => 'stderr',
+        'level' => 'WARN'
+      }
+    ]
+    assert_equal(expected, filter(messages))
+  end
+
+  test 'container json logs: cert-manager INFO' do
+    text = '{"container_id":"7d3ac22","container_name":"/cert-manager","source":"stderr","log":"I0407 07:46:06.757038 1 sync.go:445] cert-manager/controller/certificates \"level\"=0 \"msg\"=\"decoding certificate data\" \"related_resource_kind\"=\"CertificateRequest\" \"related_resource_name\"=\"demo-openware-com-tls-391607007\" \"related_resource_namespace\"=\"core-app\" \"resource_kind\"=\"Certificate\" \"resource_name\"=\"demo-openware-com-tls\" \"resource_namespace\"=\"core-app\""}'
+    messages = [
+      JSON.parse(text)
+    ]
+
+    expected = [
+      {
+        'container_id' => '7d3ac22',
+        'container_name' => '/cert-manager',
+        'message' => '1 sync.go:445] cert-manager/controller/certificates "level"=0 "msg"="decoding certificate data" "related_resource_kind"="CertificateRequest" "related_resource_name"="demo-openware-com-tls-391607007" "related_resource_namespace"="core-app" "resource_kind"="Certificate" "resource_name"="demo-openware-com-tls" "resource_namespace"="core-app"',
+        'source' => 'stderr',
+        'level' => 'INFO'
       }
     ]
     assert_equal(expected, filter(messages))

@@ -25,43 +25,24 @@ module Fluent
     class LogsFilter < Filter
       Fluent::Plugin.register_filter('logs', self)
       REGEXPS_LOGS = [
-        [/^(?<upstream_ip>\S+) - - \[(?<time>\S+ \+\d{4})\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)" "(?<user_ip>[^"]+)"$/],
-        [/^\[[^\]]+\] (?<upstream_ip>\S+) - [^ ]+ \[(?<time>[^\]]+)\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)"/],
-        [/^(?<time>\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\S+) \[(?<level>[^\]]+)\] (?<message>.*)/],
-        [/^.. \[(?<time>[^\]]+?)( \#\d+)?\] +(?<level>\S+) -- : (?<message>.*)$/],
-        [%r{^(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC (?<message>(?:\S+ ){1,2}#\d+ (?<level>\S+) import (?<peers>\d+)/(?<peers_max>\d+) peers? .*)$},
+        [/^(?<upstream_ip>\S+) - - \[\S+ \+\d{4}\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)" "(?<user_ip>[^"]+)"$/],
+        [/^\[[^\]]+\] (?<upstream_ip>\S+) - [^ ]+ \[[^\]]+\] "(?<message>\S+ \S+ [^"]+)" (?<status_code>\d{3}) (?<content_size>\d+|-) "(?<referer>.*?)" "(?<user_agent>[^"]+)"/],
+        [/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\S+ \[(?<level>[^\]]+)\] (?<message>.*)/],
+        [/^.. \[[^\]]+?( \#\d+)?\] +(?<level>\S+) -- : (?<message>.*)$/],
+        [/^(?<level>[DINWECA])\d{4} \d{2}:\d{2}:\d{2}\.\d+ +(?<message>.*)$/],
+        [%r{^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC (?<message>(?:\S+ ){1,2}#\d+ (?<level>\S+) import (?<peers>\d+)/(?<peers_max>\d+) peers? .*)$},
          lambda do |r|
            ratio = r['peers'].to_f / r['peers_max'].to_f
            l = ratio <= 0.1 ? 'ERROR' : ratio <= 0.2 ? 'WARN' : 'INFO'
            return { 'level' => l }
          end],
-        [/^(?<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC (?<message>(?:\S+ ){1,2}#\d+ (?<level>\S+) .*)$/],
+        [/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} UTC (?<message>(?:\S+ ){1,2}#\d+ (?<level>\S+) .*)$/],
         [/^ranger_\S+: \d+$/, { 'level' => 'INFO' }]
       ].freeze
 
-      REGEXPS_DATES = [
-        [/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}/, '%FT%T.%L'],
-        [/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}/, '%FT%T.%L%z'],
-        [/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, '%FT%T%z'],
-        [/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}/, '%F %T.%L'],
-        [/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/, '%F %T'],
-        [%r{\d{2}/[a-zA-Z]+/\d{4}:\d{2}:\d{2}:\d{2}}, '%d/%b/%Y:%H:%M:%S %z']
-      ].freeze
-
-      def ow_parse_time(str)
-        return nil if str.nil?
-
-        REGEXPS_DATES.each do |pattern, format|
-          if str.match(pattern)
-            return DateTime.strptime(str, format).to_time.to_i
-          end
-        end
-        DateTime.strptime(str).to_time.to_i
-      rescue ArgumentError => e
-        log.warn "#{e}, time str: #{str}"
-      end
-
       def ow_parse_logs(text)
+        return {} unless text
+
         if text[0] == '{'
           begin
             return JSON.parse(text)
@@ -96,9 +77,17 @@ module Fluent
 
       FORMATTERS = [
         ['level', lambda do |value|
-          return 'WARN' if value.match(/warning/i)
-          return 'INFO' if value.match(/note/i)
-
+          case value
+          when /^warning$/i then return 'WARN'
+          when /^note$/i then return 'INFO'
+          when 'D' then return 'DEBUG'
+          when 'I' then return 'INFO'
+          when 'N' then return 'NOTICE'
+          when 'W' then return 'WARN'
+          when 'E' then return 'ERROR'
+          when 'C' then return 'CRITICAL'
+          when 'A' then return 'ALERT'
+          end
           value.upcase
         end]
       ].freeze
@@ -106,6 +95,16 @@ module Fluent
       def ow_post_process(record)
         text = record['log']
         record.delete('log')
+
+        if record['data']
+          record['status_code'] = record['data']['status']
+          record['level'] = 'DEBUG'
+          record['message'] = JSON.dump(record.delete('data'))
+        end
+
+        if record['status_code']
+          record['status_code'] = record['status_code'].to_i
+        end
 
         RENAME_MAP.each do |src, dst|
           if record[src] && record[dst].nil?
@@ -124,22 +123,8 @@ module Fluent
 
       def filter(_tag, _time, record)
         log.trace { "filter_logs: (#{record.class}) #{record.inspect}" }
-        unless record['log']
-          if record['data']
-            record['level'] = 'DEBUG'
-            record['message'] = JSON.dump(record.delete('data'))
-          end
-          return record
-        end
-
         record = record.merge(ow_parse_logs(record['log']))
-        record = ow_post_process(record)
-
-        if record['time']
-          record['timestamp'] = ow_parse_time(record['time'])
-          record.delete('time')
-        end
-        record
+        ow_post_process(record)
       end
     end
   end
